@@ -1,6 +1,15 @@
+import { Actor, Color, DisplayMode, Engine, ImageSource, Loader, Sprite } from 'excalibur';
+import swordImg from './sword.png?url';
+const sword = new ImageSource(swordImg);
+const loader = new Loader([sword]);
 
-const sword = new ex.ImageSource('https://cdn.rawgit.com/excaliburjs/Excalibur/7dd48128/assets/sword.png', false, ex.ImageFiltering.Pixel);
-const loader = new ex.Loader([sword]);
+const game = new Engine({
+    width: 800,
+    height: 800,
+    displayMode: DisplayMode.FitScreen,
+    backgroundColor: Color.Black,
+    suppressPlayButton: true
+});
 
 const outline = `#version 300 es
 precision mediump float;
@@ -49,9 +58,9 @@ const outlineMaterial = game.graphicsContext.createMaterial({
 });
 
 
-const actor = new ex.Actor({ x: 100, y: 100, width: 50, height: 50 });
+const actor = new Actor({ x: 100, y: 100, width: 50, height: 50 });
 actor.onInitialize = () => {
-    var sprite = new ex.Sprite({
+    var sprite = new Sprite({
         image: sword,
         destSize: {
             width: 300,

@@ -11,16 +11,10 @@ uniform vec2 u_resolution;
 in vec2 v_uv;
 out vec4 fragColor;
 
-struct PointLight {
-    vec2 pos;
-    vec3 col;
-    float intensity;
-};
-
 float palette( in float a, in float b, in float c, in float d, in float x ) {
     return a + b * cos(6.28318 * (c * x + d));
 }
-    
+
 // 2D Noise from IQ
 float Noise2D( in vec2 x )
 {

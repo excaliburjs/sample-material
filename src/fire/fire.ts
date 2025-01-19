@@ -7,7 +7,8 @@ import noiseImg from './noise.png?url';
 const game = new Engine({
     width: 800,
     height: 800,
-    displayMode: DisplayMode.FitScreen
+    displayMode: DisplayMode.FitScreen,
+    suppressPlayButton: true
 });
 
 const fireShader = glsl`#version 300 es

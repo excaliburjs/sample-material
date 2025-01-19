@@ -2,6 +2,7 @@
 import * as ex from 'excalibur';
 import { PerlinDrawer2D, PerlinGenerator } from '@excaliburjs/plugin-perlin';
 import { glsl } from '../glsl';
+//import otherStar from './other-star.glsl?raw'; // ?raw pragma to get string source of the shader
 
 const game = new ex.Engine({
     width: 800,
@@ -80,12 +81,21 @@ game.start().then(async () => {
     const noiseImage = drawer.image(800, 800);
     await noiseImage.decode();
     // Show the generated noise
-    document.body.appendChild(noiseImage);
+    //document.body.appendChild(noiseImage);
     game.input.pointers.on('down', (evt) => {
         game.add(generateStar(evt.worldPos, noiseImage))
     });
-
-
+    //const startStar = new ex.Actor({
+    //    pos: ex.vec(400, 400),
+    //    radius: 200,
+    //    color: ex.Color.Red,
+    //    collisionType: ex.CollisionType.Active
+    //});
+    //startStar.graphics.material = game.graphicsContext.createMaterial({
+    //    fragmentSource: otherStar
+    //});
+    //game.add(startStar);
+    //
     const floor = new ex.Actor({
         pos: ex.vec(0, 600),
         anchor: ex.vec(0, 0),

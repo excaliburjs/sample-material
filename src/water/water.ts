@@ -1,164 +1,70 @@
 
 // identity tagged template literal lights up glsl-literal vscode plugin
 
-import { Actor, Color, CoordPlane, DisplayMode, Engine, ImageFiltering, ImageSource, Loader, ScreenElement, Sprite, vec } from "excalibur";
-import { glsl } from "./glsl";
+import { Actor, Color, CoordPlane, DisplayMode, Engine, ImageFiltering, ImageSource, ImageWrapping, Loader, ScreenElement, Sprite, TiledSprite, vec } from "excalibur";
+import { glsl } from "../glsl";
+import swordImg from "./sword.png?url";
+import starImg from './stars.png?url';
 
-var game = new Engine({
-    canvasElementId: 'game',
-    width: 512,
-    height: 512,
-    displayMode: DisplayMode.FitScreenAndFill,
-    backgroundColor: Color.Black,
-    antialiasing: true
+const game = new Engine({
+	width: 800,
+	height: 800,
+	displayMode: DisplayMode.FitScreenAndFill,
+	backgroundColor: Color.Black,
+	suppressPlayButton: true,
+	antialiasing: true
 });
 
-var tex = new ImageSource('https://cdn.rawgit.com/excaliburjs/Excalibur/7dd48128/assets/sword.png', false, ImageFiltering.Pixel);
-var heartImage = new ImageSource('./heart.png', false, ImageFiltering.Pixel);
-var background = new ImageSource('./stars.png', false, ImageFiltering.Blended);
-
-var loader = new Loader([tex, heartImage, background]);
-
-var outline = glsl`#version 300 es
-precision mediump float;
-
-uniform float u_time_ms;
-uniform sampler2D u_graphic;
-
-in vec2 v_uv;
-in vec2 v_screenuv;
-out vec4 fragColor;
-
-vec3 hsv2rgb(vec3 c){
-  vec4 K=vec4(1.,2./3.,1./3.,3.);
-  return c.z*mix(K.xxx,clamp(abs(fract(c.x+K.xyz)*6.-K.w)-K.x, 0., 1.),c.y);
-}
-
-void main() {
-  const float TAU = 6.28318530;
-  const float steps = 4.0; // up/down/left/right pixels
-  float radius = 2.0;
-  float time_sec = u_time_ms / 1000.;
-
-  vec3 outlineColorHSL = vec3(sin(time_sec/2.0) * 1., 1., 1.);
-  vec2 aspect = 1.0 / vec2(textureSize(u_graphic, 0));
-
-  for (float i = 0.0; i < TAU; i += TAU / steps) {
-    // Sample image in a circular pattern
-    vec2 offset = vec2(sin(i), cos(i)) * aspect * radius;
-    vec4 col = texture(u_graphic, v_uv + offset);
-
-    // Mix outline with background
-    float alpha = smoothstep(0.5, 0.7, col.a);
-    fragColor = mix(fragColor, vec4(hsv2rgb(outlineColorHSL), 1.0), alpha); // apply outline
-  }
-
-  // Overlay original texture
-  vec4 mat = texture(u_graphic, v_uv);
-  float factor = smoothstep(0.5, 0.7, mat.a);
-  fragColor = mix(fragColor, mat, factor);
-}
-`;
-
-var fragmentSource = glsl`#version 300 es
-precision mediump float;
-
-// UV coord
-in vec2 v_uv;
-
-uniform sampler2D u_graphic;
-
-uniform vec2 u_resolution;
-
-uniform float u_time_ms;
-
-uniform vec2 iMouse;
-
-uniform vec2 u_size;
-
-uniform vec4 u_color;
-
-uniform float u_opacity;
-
-out vec4 fragColor;
-
-void main() {
-  vec4 color = u_color;
-  float time_sec = u_time_ms / 1000.;
-  float effectRadius = .5;
-  float effectAngle = mod(time_sec/2., 2.)  * 3.14159;
-
-  vec2 size = u_size.xy;
-  vec2 center = iMouse.xy / u_size.xy;
-  vec2 uv = v_uv.xy - center;
-
-  float len = length(uv * vec2(size.x / size.y, 1.));
-  float angle = atan(uv.y, uv.x) + effectAngle * smoothstep(effectRadius, 0., len);
-  float radius = length(uv);
-  vec2 newUv = vec2(radius * cos(angle), radius * sin(angle)) + center;
-   color = texture(u_graphic, newUv);
-   color.rgb = color.rgb * u_opacity;
-   color.a = color.a * u_opacity;
-  
-   fragColor = color * u_color;
-}
-`;
-
-var swirlMaterial = game.graphicsContext.createMaterial({
-    name: 'swirl',
-    fragmentSource
+const tex = new ImageSource(swordImg, false, ImageFiltering.Pixel);
+const background = new ImageSource(starImg, {
+	filtering: ImageFiltering.Blended,
+	wrapping: ImageWrapping.Repeat
 });
 
-var click = vec(0, 0);
+const loader = new Loader([tex, background]);
+
+let click = vec(0, 0);
 
 game.input.pointers.primary.on('down', (evt) => {
-    click = evt.worldPos; // might need to change if you have a camera
+	click = evt.worldPos; // might need to change if you have a camera
 });
 
-var outlineMaterial = game.graphicsContext.createMaterial({
-    name: 'outline',
-    fragmentSource: outline
-});
 
-var actor = new Actor({ x: 100, y: 100, width: 50, height: 50 });
+const actor = new Actor({ x: 100, y: 100, width: 50, height: 50 });
 actor.onInitialize = () => {
-    var sprite = new Sprite({
-        image: tex,
-        destSize: {
-            width: 300,
-            height: 300
-        }
-    });
-    actor.graphics.add(sprite);
-};
-actor.graphics.material = outlineMaterial;
-
-var heartActor = new Actor({ x: 200, y: 200 });
-heartActor.onInitialize = () => {
-    var sprite = heartImage.toSprite();
-    sprite.scale = vec(4, 4);
-    heartActor.graphics.add(sprite);
-    heartActor.graphics.material = outlineMaterial;
+	const sprite = new Sprite({
+		image: tex,
+		destSize: {
+			width: 300,
+			height: 300
+		}
+	});
+	actor.graphics.add(sprite);
 };
 
-game.add(heartActor);
 
 game.input.pointers.primary.on('move', (evt) => {
-    heartActor.pos = evt.worldPos;
-    swirlMaterial.update((shader) => {
-        shader.trySetUniformFloatVector('iMouse', evt.worldPos);
-    });
+	actor.pos = evt.worldPos;
 });
 
-var backgroundActor = new ScreenElement({ x: 0, y: 0, width: 512, height: 512, z: -1 });
+const backgroundActor = new ScreenElement({
+	x: game.screen.unsafeArea.left,
+	y: game.screen.unsafeArea.top,
+	width: 800,
+	height: 800,
+	z: -1
+});
 
 backgroundActor.onInitialize = () => {
-    backgroundActor.graphics.add(background.toSprite());
-    backgroundActor.graphics.material = swirlMaterial;
+	const bgSprite = new TiledSprite({
+		image: background,
+		width: 1000,
+		height: 1000
+	});
+	backgroundActor.graphics.add(bgSprite);
 };
 
-// material without graphic!?
-var waterFrag = glsl`#version 300 es
+const waterFrag = glsl`#version 300 es
 precision mediump float;
 
 #define NUM_NOISE_OCTAVES 20
@@ -269,22 +175,22 @@ void main() {
 const noise = new ImageSource('./noise.avif', false, ImageFiltering.Pixel);
 loader.addResource(noise);
 
-var waterMaterial = game.graphicsContext.createMaterial({
-    name: 'water',
-    fragmentSource: waterFrag,
-    color: Color.fromRGB(55, 0, 200, 0.6),
-    images: {
-        u_noise: noise
-    }
+const waterMaterial = game.graphicsContext.createMaterial({
+	name: 'water',
+	fragmentSource: waterFrag,
+	color: Color.fromRGB(55, 0, 200, 0.6),
+	images: {
+		u_noise: noise
+	}
 });
-var reflection = new Actor({
-    x: 0,
-    y: game.screen.resolution.height / 2,
-    anchor: vec(0, 0),
-    width: 512,
-    height: game.screen.resolution.height / 2,
-    coordPlane: CoordPlane.Screen,
-    color: Color.Red
+const reflection = new Actor({
+	x: game.screen.unsafeArea.left,
+	y: game.screen.resolution.height / 2,
+	anchor: vec(0, 0),
+	width: 1000,
+	height: 600,
+	coordPlane: CoordPlane.Screen,
+	color: Color.Red
 });
 
 reflection.graphics.material = waterMaterial;
@@ -294,7 +200,4 @@ game.add(actor);
 game.add(backgroundActor);
 game.add(reflection);
 
-game.start(loader).then(async () => {
-    // const image = await game.screenshot(true);
-    // document.body.appendChild(image);
-});
+game.start(loader);
