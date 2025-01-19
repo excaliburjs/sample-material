@@ -23,13 +23,6 @@ const background = new ImageSource(starImg, {
 
 const loader = new Loader([tex, background]);
 
-let click = vec(0, 0);
-
-game.input.pointers.primary.on('down', (evt) => {
-	click = evt.worldPos; // might need to change if you have a camera
-});
-
-
 const actor = new Actor({ x: 100, y: 100, width: 50, height: 50 });
 actor.onInitialize = () => {
 	const sprite = new Sprite({
