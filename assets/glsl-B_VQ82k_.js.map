@@ -1,0 +1,1 @@
+{"version":3,"file":"glsl-B_VQ82k_.js","sources":["../../src/glsl.ts"],"sourcesContent":["\nexport const glsl = (x: any) => x[0];\n\n"],"names":["glsl","x"],"mappings":"AACO,MAAMA,EAAQC,GAAWA,EAAE,CAAC"}
