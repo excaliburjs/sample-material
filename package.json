@@ -23,12 +23,13 @@
   "bugs": {},
   "homepage": "",
   "dependencies": {
-    "excalibur": "0.30.3",
-    "@excaliburjs/plugin-perlin": "0.30.0"
+    "@excaliburjs/plugin-perlin": "0.30.0",
+    "excalibur": "0.30.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",
     "@types/node": "^22.10.2",
+    "glob": "^11.0.1",
     "typescript": "5.7.3",
     "vite": "6.0.7"
   }
